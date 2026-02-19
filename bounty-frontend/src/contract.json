@@ -1,0 +1,143 @@
+{
+  "contractName": "BountyBoard",
+  "version": "1.0.0",
+  "network": "testnet",
+  "appId": 755782380,
+  "appAddress": "6EZRERYLBPXSN44CU7ZHS4AG743ASLUYHJAJ57UXKJTSE4AIFJNJNYIUMM",
+  "creator": "Y4ZV6XYFWDTVSMEVYQ2SZCHBA27YJMMIU56O7WWIVENDZOFCNEDP5WNVNI",
+  "deployedAt": null,
+  "abi": {
+    "name": "BountyBoard",
+    "description": "Escrow marketplace for micro-tasks on Algorand",
+    "methods": [
+      {
+        "name": "create_task",
+        "args": [
+          {
+            "type": "string",
+            "name": "title",
+            "description": "Task title"
+          },
+          {
+            "type": "string",
+            "name": "description",
+            "description": "Task description"
+          },
+          {
+            "type": "uint64",
+            "name": "deadline",
+            "description": "Unix timestamp deadline"
+          }
+        ],
+        "returns": {
+          "type": "uint64",
+          "description": "Task ID"
+        },
+        "description": "Create a new task with escrow payment (requires grouped payment transaction)"
+      },
+      {
+        "name": "claim_task",
+        "args": [
+          {
+            "type": "uint64",
+            "name": "task_id",
+            "description": "Task ID to claim"
+          }
+        ],
+        "returns": {
+          "type": "void"
+        },
+        "description": "Claim an open task as a freelancer"
+      },
+      {
+        "name": "submit_work",
+        "args": [
+          {
+            "type": "uint64",
+            "name": "task_id",
+            "description": "Task ID"
+          },
+          {
+            "type": "string",
+            "name": "proof_hash",
+            "description": "IPFS hash or URL of work proof"
+          }
+        ],
+        "returns": {
+          "type": "void"
+        },
+        "description": "Submit work proof for a claimed task"
+      },
+      {
+        "name": "approve_task",
+        "args": [
+          {
+            "type": "uint64",
+            "name": "task_id",
+            "description": "Task ID to approve"
+          }
+        ],
+        "returns": {
+          "type": "void"
+        },
+        "description": "Approve completed task and release payment to freelancer"
+      },
+      {
+        "name": "reject_task",
+        "args": [
+          {
+            "type": "uint64",
+            "name": "task_id",
+            "description": "Task ID to reject"
+          }
+        ],
+        "returns": {
+          "type": "void"
+        },
+        "description": "Reject submitted work (allows resubmission)"
+      },
+      {
+        "name": "refund_task",
+        "args": [
+          {
+            "type": "uint64",
+            "name": "task_id",
+            "description": "Task ID to refund"
+          }
+        ],
+        "returns": {
+          "type": "void"
+        },
+        "description": "Refund task if deadline passed or by client before work submitted"
+      }
+    ],
+    "networks": {}
+  },
+  "taskStatus": {
+    "OPEN": 0,
+    "CLAIMED": 1,
+    "SUBMITTED": 2,
+    "APPROVED": 3,
+    "REJECTED": 4,
+    "REFUNDED": 5
+  },
+  "boxSchema": {
+    "description": "Tasks are stored in boxes with the following keys",
+    "keys": [
+      "{task_id}_client",
+      "{task_id}_freelancer",
+      "{task_id}_amount",
+      "{task_id}_deadline",
+      "{task_id}_status",
+      "{task_id}_title",
+      "{task_id}_description",
+      "{task_id}_proof"
+    ]
+  },
+  "notes": {
+    "create_task": "Requires atomic group with payment transaction first",
+    "deadline": "Unix timestamp in seconds",
+    "amounts": "In microAlgos (1 ALGO = 1,000,000 microAlgos)",
+    "minimum_balance": "Contract needs ~0.5 ALGO for box storage per task"
+  }
+}

@@ -1,0 +1,6 @@
+#pragma version 10
+
+// BountyBoard Clear State Program
+// Allow users to clear their local state
+int 1
+return

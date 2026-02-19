@@ -1,0 +1,579 @@
+#pragma version 10
+
+// BountyBoard Smart Contract - Approval Program
+// Handles escrow marketplace for micro-tasks
+
+// Check if this is app creation
+txn ApplicationID
+int 0
+==
+bnz app_create
+
+// Router for method calls
+txna ApplicationArgs 0
+byte "create_task"
+==
+bnz create_task
+
+txna ApplicationArgs 0
+byte "claim_task"
+==
+bnz claim_task
+
+txna ApplicationArgs 0
+byte "submit_work"
+==
+bnz submit_work
+
+txna ApplicationArgs 0
+byte "approve_task"
+==
+bnz approve_task
+
+txna ApplicationArgs 0
+byte "reject_task"
+==
+bnz reject_task
+
+txna ApplicationArgs 0
+byte "refund_task"
+==
+bnz refund_task
+
+// Default: reject
+err
+
+// ===== APP CREATION =====
+app_create:
+    // Initialize task counter
+    byte "task_counter"
+    int 0
+    app_global_put
+    int 1
+    return
+
+// ===== CREATE TASK =====
+create_task:
+    // Verify this is part of a grouped transaction
+    global GroupSize
+    int 2
+    ==
+    assert
+    
+    // Verify first transaction is payment to app
+    gtxn 0 TypeEnum
+    int pay
+    ==
+    assert
+    
+    gtxn 0 Receiver
+    global CurrentApplicationAddress
+    ==
+    assert
+    
+    gtxn 0 Amount
+    int 0
+    >
+    assert
+    
+    // Get and increment task counter
+    byte "task_counter"
+    dup
+    app_global_get
+    dup
+    store 0  // Store task_id in scratch 0
+    int 1
+    +
+    app_global_put
+    
+    // Create box for task (task_id + fields)
+    // Client box
+    load 0
+    itob
+    byte "_client"
+    concat
+    int 32
+    box_create
+    assert
+    load 0
+    itob
+    byte "_client"
+    concat
+    txn Sender
+    box_put
+    
+    // Freelancer box
+    load 0
+    itob
+    byte "_freelancer"
+    concat
+    int 32
+    box_create
+    assert
+    load 0
+    itob
+    byte "_freelancer"
+    concat
+    global ZeroAddress
+    box_put
+    
+    // Amount box
+    load 0
+    itob
+    byte "_amount"
+    concat
+    int 8
+    box_create
+    assert
+    load 0
+    itob
+    byte "_amount"
+    concat
+    gtxn 0 Amount
+    itob
+    box_put
+    
+    // Deadline box
+    load 0
+    itob
+    byte "_deadline"
+    concat
+    int 8
+    box_create
+    assert
+    load 0
+    itob
+    byte "_deadline"
+    concat
+    txna ApplicationArgs 3
+    box_put
+    
+    // Status box
+    load 0
+    itob
+    byte "_status"
+    concat
+    int 8
+    box_create
+    assert
+    load 0
+    itob
+    byte "_status"
+    concat
+    int 0  // OPEN
+    itob
+    box_put
+    
+    // Title box
+    load 0
+    itob
+    byte "_title"
+    concat
+    txna ApplicationArgs 1
+    len
+    box_create
+    assert
+    load 0
+    itob
+    byte "_title"
+    concat
+    txna ApplicationArgs 1
+    box_put
+    
+    // Description box
+    load 0
+    itob
+    byte "_description"
+    concat
+    txna ApplicationArgs 2
+    len
+    box_create
+    assert
+    load 0
+    itob
+    byte "_description"
+    concat
+    txna ApplicationArgs 2
+    box_put
+    
+    // Proof box
+    load 0
+    itob
+    byte "_proof"
+    concat
+    int 1
+    box_create
+    assert
+    load 0
+    itob
+    byte "_proof"
+    concat
+    byte ""
+    box_put
+    
+    // Log task creation
+    byte "task_created:"
+    load 0
+    itob
+    concat
+    log
+    
+    int 1
+    return
+
+// ===== CLAIM TASK =====
+claim_task:
+    // Get task_id
+    txna ApplicationArgs 1
+    btoi
+    store 1
+    
+    // Check status is OPEN (0)
+    load 1
+    itob
+    byte "_status"
+    concat
+    box_get
+    assert
+    btoi
+    int 0
+    ==
+    assert
+    
+    // Check sender is not the client
+    load 1
+    itob
+    byte "_client"
+    concat
+    box_get
+    assert
+    txn Sender
+    !=
+    assert
+    
+    // Update freelancer
+    load 1
+    itob
+    byte "_freelancer"
+    concat
+    txn Sender
+    box_put
+    
+    // Update status to CLAIMED (1)
+    load 1
+    itob
+    byte "_status"
+    concat
+    int 1
+    itob
+    box_put
+    
+    byte "task_claimed:"
+    load 1
+    itob
+    concat
+    log
+    
+    int 1
+    return
+
+// ===== SUBMIT WORK =====
+submit_work:
+    // Get task_id
+    txna ApplicationArgs 1
+    btoi
+    store 2
+    
+    // Check status is CLAIMED (1)
+    load 2
+    itob
+    byte "_status"
+    concat
+    box_get
+    assert
+    btoi
+    int 1
+    ==
+    assert
+    
+    // Check sender is freelancer
+    load 2
+    itob
+    byte "_freelancer"
+    concat
+    box_get
+    assert
+    txn Sender
+    ==
+    assert
+    
+    // Update proof hash
+    load 2
+    itob
+    byte "_proof"
+    concat
+    box_del
+    pop
+    load 2
+    itob
+    byte "_proof"
+    concat
+    txna ApplicationArgs 2
+    len
+    box_create
+    assert
+    load 2
+    itob
+    byte "_proof"
+    concat
+    txna ApplicationArgs 2
+    box_put
+    
+    // Update status to SUBMITTED (2)
+    load 2
+    itob
+    byte "_status"
+    concat
+    int 2
+    itob
+    box_put
+    
+    byte "work_submitted:"
+    load 2
+    itob
+    concat
+    log
+    
+    int 1
+    return
+
+// ===== APPROVE TASK =====
+approve_task:
+    // Get task_id
+    txna ApplicationArgs 1
+    btoi
+    store 3
+    
+    // Check status is SUBMITTED (2)
+    load 3
+    itob
+    byte "_status"
+    concat
+    box_get
+    assert
+    btoi
+    int 2
+    ==
+    assert
+    
+    // Check sender is client
+    load 3
+    itob
+    byte "_client"
+    concat
+    box_get
+    assert
+    txn Sender
+    ==
+    assert
+    
+    // Update status to APPROVED (3) BEFORE payment
+    load 3
+    itob
+    byte "_status"
+    concat
+    int 3
+    itob
+    box_put
+    
+    // Get amount
+    load 3
+    itob
+    byte "_amount"
+    concat
+    box_get
+    assert
+    btoi
+    store 4
+    
+    // Get freelancer
+    load 3
+    itob
+    byte "_freelancer"
+    concat
+    box_get
+    assert
+    store 5
+    
+    // Send payment to freelancer
+    itxn_begin
+    int pay
+    itxn_field TypeEnum
+    load 5
+    itxn_field Receiver
+    load 4
+    itxn_field Amount
+    int 0
+    itxn_field Fee
+    itxn_submit
+    
+    byte "task_approved:"
+    load 3
+    itob
+    concat
+    log
+    
+    int 1
+    return
+
+// ===== REJECT TASK =====
+reject_task:
+    // Get task_id
+    txna ApplicationArgs 1
+    btoi
+    store 6
+    
+    // Check status is SUBMITTED (2)
+    load 6
+    itob
+    byte "_status"
+    concat
+    box_get
+    assert
+    btoi
+    int 2
+    ==
+    assert
+    
+    // Check sender is client
+    load 6
+    itob
+    byte "_client"
+    concat
+    box_get
+    assert
+    txn Sender
+    ==
+    assert
+    
+    // Update status back to CLAIMED (1)
+    load 6
+    itob
+    byte "_status"
+    concat
+    int 1
+    itob
+    box_put
+    
+    // Clear proof
+    load 6
+    itob
+    byte "_proof"
+    concat
+    byte ""
+    box_put
+    
+    byte "task_rejected:"
+    load 6
+    itob
+    concat
+    log
+    
+    int 1
+    return
+
+// ===== REFUND TASK =====
+refund_task:
+    // Get task_id
+    txna ApplicationArgs 1
+    btoi
+    store 7
+    
+    // Get client
+    load 7
+    itob
+    byte "_client"
+    concat
+    box_get
+    assert
+    store 8
+    
+    // Get status
+    load 7
+    itob
+    byte "_status"
+    concat
+    box_get
+    assert
+    btoi
+    store 9
+    
+    // Get deadline
+    load 7
+    itob
+    byte "_deadline"
+    concat
+    box_get
+    assert
+    btoi
+    store 10
+    
+    // Check: sender is client OR deadline passed
+    txn Sender
+    load 8
+    ==
+    global LatestTimestamp
+    load 10
+    >
+    ||
+    assert
+    
+    // Check: status is OPEN (0) or CLAIMED (1)
+    load 9
+    int 0
+    ==
+    load 9
+    int 1
+    ==
+    ||
+    assert
+    
+    // Update status to REFUNDED (5) BEFORE refund
+    load 7
+    itob
+    byte "_status"
+    concat
+    int 5
+    itob
+    box_put
+    
+    // Get amount
+    load 7
+    itob
+    byte "_amount"
+    concat
+    box_get
+    assert
+    btoi
+    store 11
+    
+    // Refund to client
+    itxn_begin
+    int pay
+    itxn_field TypeEnum
+    load 8
+    itxn_field Receiver
+    load 11
+    itxn_field Amount
+    int 0
+    itxn_field Fee
+    itxn_submit
+    
+    byte "task_refunded:"
+    load 7
+    itob
+    concat
+    log
+    
+    int 1
+    return

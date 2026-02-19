@@ -1,0 +1,72 @@
+╔═══════════════════════════════════════════════════════════════╗
+║         GITHUB COMMIT CHECKLIST - BountyBoard dApp            ║
+╚═══════════════════════════════════════════════════════════════╝
+
+✅ INCLUDE THESE IN YOUR COMMIT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 FOLDERS:
+  ✅ src/                    (ALL source code)
+  ✅ public/                 (if you have any files here)
+
+📄 ROOT FILES:
+  ✅ package.json
+  ✅ package-lock.json
+  ✅ vite.config.ts
+  ✅ tsconfig.json
+  ✅ tsconfig.app.json
+  ✅ tsconfig.node.json
+  ✅ tailwind.config.js
+  ✅ postcss.config.js
+  ✅ index.html
+  ✅ vercel.json
+  ✅ .gitignore
+  ✅ .vercelignore
+  ✅ eslint.config.js
+  ✅ README.md
+  ✅ DEPLOY.md
+  ✅ GITHUB_COMMIT_GUIDE.md
+  ✅ COMMIT_CHECKLIST.txt
+
+
+❌ DO NOT INCLUDE (Auto-excluded by .gitignore):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ❌ node_modules/           (100+ MB - Vercel installs this)
+  ❌ dist/                   (Build output - Vercel builds this)
+  ❌ .vercel/                (Deployment cache)
+
+
+📝 COMMIT MESSAGE SUGGESTION:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Initial commit: Algorand BountyBoard dApp
+
+Features:
+- Smart contract integration (TestNet App ID: 741636419)
+- Pera Wallet integration via WalletConnect
+- Task lifecycle: Create → Claim → Submit → Approve/Reject/Refund
+- React + TypeScript + Vite + TailwindCSS
+- Production-ready with Vercel deployment config
+
+
+🚀 AFTER COMMIT & PUSH TO GITHUB:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Go to: https://vercel.com/new
+2. Click "Import Git Repository"
+3. Select your repository
+4. Click "Deploy"
+5. Wait 2-3 minutes
+6. Get your live URL!
+
+Done! Your dApp will be live! 🎉
+
+
+═══════════════════════════════════════════════════════════════
+
+Total files to commit: ~20-30 files
+Size: ~2-5 MB (without node_modules & dist)
+Build time on Vercel: 2-3 minutes
+
+═══════════════════════════════════════════════════════════════
